@@ -1,0 +1,532 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Dual.Vault v9 — Infinity Book</title>
+<script src="https://cdn.tailwindcss.com"></script>
+<meta name="theme-color" content="#050505">
+
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#050505">
+<link rel="apple-touch-icon" href="./icon-192.png">
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js')
+      .then(() => console.log('Service Worker Registered'));
+  }
+</script>
+
+  
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&family=JetBrains+Mono:wght@400;700&display=swap');
+
+:root {
+    --bg: #050505;
+    --glass: rgba(30, 30, 30, 0.4);
+    --glass-hover: rgba(50, 50, 50, 0.5);
+    --border: rgba(255, 255, 255, 0.08);
+    --neon-p: #23ac51; /* Verde Cyber */
+    --neon-o: #f97316; /* Laranja Hub */
+    --neon-b: #3b82f6; /* Azul Warframe */
+    --neon-r: #ef4444; /* Vermelho Erro */
+    --neon-c: #06b6d4; /* Ciano Livro */
+    --radius: 16px;
+}
+
+body {
+    background: var(--bg);
+    font-family: 'Plus Jakarta Sans', sans-serif;
+    display: flex; flex-direction: column; align-items: center;
+    padding: 20px 10px; min-height: 100vh; color: #e2e8f0;
+    overflow-x: hidden;
+}
+
+/* --- CARD SYSTEM (Infinity Core) --- */
+.master-card {
+    width: 100%; max-width: 500px;
+    background: var(--glass); backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);
+    border-radius: 24px; border: 1px solid var(--border);
+    margin-bottom: 16px; position: relative; overflow: hidden;
+    transition: transform 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+}
+.master-card:focus-within { border-color: var(--neon-b); box-shadow: 0 0 15px rgba(59, 130, 246, 0.2); }
+.inner { padding: 16px; }
+
+/* HEADER */
+.header { display: flex; justify-content: space-between; align-items: center; min-height: 44px; gap: 10px; }
+.title-group { flex-grow: 1; cursor: pointer; display: flex; flex-direction: column; overflow: hidden; }
+.card-title { font-weight: 800; font-size: 15px; color: #f8fafc; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.card-meta { font-size: 10px; color: #94a3b8; font-family: 'JetBrains Mono', monospace; display: flex; gap: 8px; align-items: center; margin-top: 2px;}
+.tag-badge { background: rgba(255,255,255,0.1); padding: 2px 6px; border-radius: 4px; color: var(--neon-p); font-size: 9px; letter-spacing: 0.5px;}
+
+/* DOCK DE AÇÃO */
+.dock { display: flex; gap: 6px; align-items: center; flex-shrink: 0; }
+.ico {
+    width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    color: #cbd5e1; cursor: pointer; transition: all 0.2s;
+    font-size: 14px;
+}
+.ico:hover { background: rgba(255,255,255,0.1); color: white; transform: translateY(-1px); }
+.ico:active { transform: scale(0.95); }
+
+/* CONTENT BOX */
+.content-box {
+    max-height: 0; overflow: hidden; opacity: 0;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.expanded .content-box { max-height: none; opacity: 1; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+
+/* INPUTS */
+.code-area {
+    width: 100%; background: rgba(0,0,0,0.3); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px; color: #e2e8f0;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; line-height: 1.5;
+    outline: none; resize: vertical; min-height: 120px;
+}
+.code-area:focus { border-color: var(--neon-p); }
+
+/* --- LIVRO-VIVO RENDERER STYLES (Adapted for Infinity) --- */
+.lv-root { font-size: 14px; line-height: 1.6; color: #e2e8f0; }
+
+/* Accordion / Details */
+.lv-root details.acc {
+    background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.05);
+    border-radius: 12px; margin-bottom: 8px; overflow: hidden;
+    transition: background 0.2s;
+}
+.lv-root details.acc[open] { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.1); }
+.lv-root summary {
+    display: flex; align-items: center; gap: 10px; padding: 10px 14px;
+    cursor: pointer; font-weight: 700; color: var(--neon-c); list-style: none;
+    user-select: none;
+}
+.lv-root summary::-webkit-details-marker { display: none; }
+.lv-root .chev {
+    width: 8px; height: 8px; border-right: 2px solid var(--neon-c); border-bottom: 2px solid var(--neon-c);
+    transform: rotate(-45deg); transition: transform 0.2s;
+}
+.lv-root details[open] .chev { transform: rotate(45deg); }
+.lv-root .sec { padding: 12px 14px; border-top: 1px solid rgba(255,255,255,0.05); }
+
+/* Code Blocks */
+.lv-root pre.md-code {
+    background: #0d0f14; border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 8px; padding: 12px; margin: 10px 0; overflow-x: auto;
+    font-family: 'JetBrains Mono', monospace; font-size: 12px; position: relative;
+}
+.lv-root .kbd {
+    background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 4px; padding: 1px 5px; font-family: 'JetBrains Mono', monospace; font-size: 0.9em;
+}
+
+/* Callouts */
+.lv-root .callout {
+    border-left: 3px solid var(--neon-p); background: rgba(35, 172, 81, 0.05);
+    border-radius: 8px; padding: 10px 12px; margin: 10px 0; font-size: 0.95em;
+}
+.lv-root .callout.warn { border-color: var(--neon-o); background: rgba(249, 115, 22, 0.05); }
+.lv-root .callout.danger { border-color: var(--neon-r); background: rgba(239, 68, 68, 0.05); }
+.lv-root .callout.info { border-color: var(--neon-b); background: rgba(59, 130, 246, 0.05); }
+
+/* Tables & Quotes */
+.lv-root blockquote { border-left: 3px solid var(--neon-c); padding-left: 12px; color: #94a3b8; margin: 10px 0; font-style: italic; }
+.lv-root table.md-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; }
+.lv-root table.md-table th, .lv-root table.md-table td {
+    border: 1px solid rgba(255,255,255,0.1); padding: 8px; text-align: left;
+}
+.lv-root table.md-table th { background: rgba(255,255,255,0.05); color: var(--neon-c); }
+
+/* Equations / Functions */
+.lv-root .equation {
+    background: #0d0f14; padding: 10px; border-radius: 8px;
+    font-family: 'JetBrains Mono', monospace; color: #a5b4fc; margin: 10px 0;
+    white-space: pre-wrap; border: 1px dashed rgba(255,255,255,0.1);
+}
+
+/* Helpers */
+.copy-hint { 
+    position: absolute; right: 8px; top: 8px; font-size: 9px; 
+    color: rgba(255,255,255,0.4); text-transform: uppercase; cursor: pointer;
+}
+.copy-hint:hover { color: white; }
+
+/* Filter Bar */
+.filter-bar { width: 100%; max-width: 500px; display: flex; gap: 8px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 2px; }
+.filter-pill {
+    background: var(--glass); border: 1px solid var(--border); color: #94a3b8;
+    padding: 6px 14px; border-radius: 16px; font-size: 11px; font-weight: 600;
+    cursor: pointer; white-space: nowrap; transition: 0.2s;
+}
+.filter-pill.active { background: var(--neon-p); color: white; border-color: var(--neon-p); }
+
+/* Action Buttons Custom */
+.btn-action {
+    flex: 1; border-radius: 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 6px; height: 34px;
+    border: 1px solid transparent; background: rgba(255,255,255,0.05); color: #cbd5e1;
+}
+.btn-action:hover { background: rgba(255,255,255,0.1); color: white; }
+.btn-primary { background: var(--neon-p); color: white; box-shadow: 0 4px 12px rgba(35, 172, 81, 0.3); }
+.btn-primary:hover { background: #2dc962; }
+.btn-livro { color: var(--neon-c); border-color: rgba(6, 182, 212, 0.3); background: rgba(6, 182, 212, 0.1); }
+.btn-livro:hover { background: rgba(6, 182, 212, 0.2); box-shadow: 0 0 10px rgba(6, 182, 212, 0.15); }
+</style>
+</head>
+<body>
+
+<div id="livro-root-engine" style="display:none"></div>
+
+<div class="filter-bar" id="filterBar">
+    <div class="filter-pill active" onclick="filterVault('ALL')">ALL</div>
+    <div class="filter-pill" onclick="filterVault('LIVRO')">LIVRO</div>
+    <div class="filter-pill" onclick="filterVault('CODE')">CODE</div>
+    <div class="filter-pill" onclick="filterVault('DOCS')">DOCS</div>
+</div>
+
+<div class="master-card" id="main">
+    <div class="inner">
+        <div class="header">
+            <div class="title-group" onclick="toggle('main')">
+                <span class="card-title" style="color: var(--neon-p);">⚡ DUAL.VAULT <span style="opacity:0.5; font-weight:400">v9</span></span>
+                <span class="card-meta">INFINITY • LIVRO-VIVO INTEGRATED</span>
+            </div>
+            <div class="dock">
+                <button class="ico" onclick="magicPaste()" title="Colar e Salvar Rápido">📋</button>
+                <button class="ico" onclick="toggle('main')" title="Minimizar">_</button>
+            </div>
+        </div>
+        
+        <div class="content-box expanded" style="max-height:none; opacity:1; border:none; margin:0; padding-top:0;">
+            <div style="position: relative; margin-top: 12px;">
+                <textarea id="mainInput" class="code-area" placeholder="# Escreva seu Markdown aqui...&#10;::info&#10;Use o botão RENDER BOOK para converter.&#10;::"></textarea>
+                <button onclick="document.getElementById('mainInput').value=''" style="position: absolute; top: 8px; right: 8px; background: rgba(255,255,255,0.1); color: white; border: none; padding: 2px 6px; border-radius: 4px; font-size: 9px; cursor: pointer;">CLR</button>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+                <input id="mainGroup" placeholder="(Grupo)" style="background:transparent; border:1px solid var(--border); color:white; padding:0 10px; border-radius:8px; width: 25%; font-size: 11px;">
+                
+                <button class="btn-action" onclick="saveManual()">SAVE RAW</button>
+                <button class="btn-action btn-livro" onclick="renderAndSaveBook()">RENDER BOOK</button>
+                
+                <input type="file" id="importFile" accept=".json,.html,.md,.txt" style="display:none" onchange="importBackup(event)">
+                <button class="ico" style="width:40px; border-radius:8px; height:34px;" onclick="document.getElementById('importFile').click()" title="Import">📂</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="vault" style="width: 100%; max-width: 500px; padding-bottom: 40px;"></div>
+
+<script>
+/* -----------------------------------------------------------
+   LIVRO-VIVO RENDERER ENGINE (Unified & Integrated)
+   ----------------------------------------------------------- */
+function escapeHtml(s){ return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+function autoLink(url){ try{ const u=new URL(url); return `<a href="${u.href}" target="_blank" style="color:var(--neon-b);text-decoration:underline">${u.href}</a>` }catch{return url} }
+
+function inlineMD(s){
+  s = escapeHtml(s);
+  s = s.replace(/!\[(.*?)\]\((.*?)\)/g, (_,a,src)=>`<img style="max-width:100%;border-radius:8px;margin:8px 0" alt="${a}" src="${src}">`);
+  s = s.replace(/\[(.*?)\]\((.*?)\)/g, (_,t,href)=>`<a href="${href}" target="_blank" style="color:var(--neon-b)">${t}</a>`);
+  s = s.replace(/`([^`]+)`/g, (_,c)=> `<code class="kbd">${c}</code>`);
+  s = s.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+  s = s.replace(/(^|[^*])\*([^*]+)\*(?!\*)/g, '$1<em>$2</em>');
+  s = s.replace(/~~([^~]+)~~/g, '<del>$1</del>');
+  s = s.replace(/\bhttps?:\/\/[^\s)]+/g, m => autoLink(m));
+  return s;
+}
+
+function preprocessMD(text){
+  const lines = String(text||'').replace(/\r\n?/g,'\n').split('\n');
+  const out=[]; let i=0;
+  while(i<lines.length){
+    let l = lines[i];
+    // Heurística para arrow functions JS virarem blocos de código
+    if(/^\s*(?:const|let|var)\s+[A-Za-z_$][\w$]*\s*=\s*(?:\([^)]*\)|[A-Za-z_$][\w$]*)\s*=>\s*(?:\{[^}]*\}|[^;]+;?)\s*$/.test(l)){
+      out.push('$$'); out.push(l); out.push('$$'); i++; continue;
+    }
+    out.push(l); i++;
+  }
+  return out.join('\n');
+}
+
+function autoBuildRenderer(md, targetEl){
+  targetEl.innerHTML = '';
+  const AUTO_SPLIT_EVERY = 20; // Seção automática se muito longo
+  let sectionCount = 0, blocksInSection = 0, sec = null;
+
+  function newSection(title){
+    sectionCount++;
+    const details = document.createElement('details'); details.className = 'acc'; details.open = sectionCount === 1; // Primeiro aberto
+    const sum = document.createElement('summary');
+    sum.innerHTML = `<span class="chev"></span><span>${escapeHtml(title || ('Seção '+sectionCount))}</span>`;
+    const cont = document.createElement('div'); cont.className = 'sec';
+    details.append(sum, cont);
+    targetEl.appendChild(details);
+    blocksInSection = 0;
+    return details;
+  }
+  function ensureSection(titleIfNew){
+    if(!sec) sec = newSection(titleIfNew||'Documento');
+    if(blocksInSection >= AUTO_SPLIT_EVERY) sec = newSection((sec.querySelector('summary span:last-child').textContent)+' (cont.)');
+    return sec;
+  }
+  function appendToSection(el){ ensureSection(); sec.lastElementChild.appendChild(el); blocksInSection++; }
+  function copyText(el){ navigator.clipboard.writeText(el.innerText.replace('COPY','').trim()).then(()=>toast('Copiado!')); }
+
+  const lines = String(preprocessMD(md)).split('\n');
+  let i = 0, inCode = false, codeLang = '', buf = [], inFn = false, fnDepth = 0;
+
+  function flushParagraph(){
+    if(!buf.length) return;
+    const content = buf.join(' ').trim();
+    if(!content) return;
+    const p = document.createElement('p'); p.style.margin="8px 0";
+    p.innerHTML = inlineMD(content);
+    appendToSection(p);
+    buf.length = 0;
+  }
+
+  while(i < lines.length){
+    let line = lines[i] || '';
+    const norm = line.replace(/[’‘]/g, "'");
+
+    // Code Fences
+    const mFence = norm.match(/^\s*(?:```|''')([\w-]+)?\s*$/);
+    if(mFence && !inCode){
+      flushParagraph(); inCode = true; codeLang = (mFence[1]||'').toLowerCase(); i++; continue;
+    }
+    if(inCode){
+      if(/^\s*(?:```|''')+\s*$/.test(norm)){
+        const pre = document.createElement('pre'); pre.className = 'md-code';
+        pre.innerHTML = `<span class="copy-hint">COPY</span><code class="lang-${codeLang}">${escapeHtml(buf.join('\n'))}</code>`;
+        pre.onclick = ()=>copyText(pre);
+        appendToSection(pre);
+        buf.length = 0; inCode = false;
+      } else { buf.push(line); }
+      i++; continue;
+    }
+
+    // Headings
+    const mH = line.match(/^\s*(#{1,6})\s+(.+?)\s*$/);
+    if(mH){ flushParagraph(); sec = newSection(mH[2].trim()); i++; continue; }
+
+    // Blockquotes
+    if(/^\s*>/.test(line)){
+      flushParagraph();
+      let bqText = [];
+      while(i < lines.length && /^\s*>/.test(lines[i])){ bqText.push(lines[i].replace(/^\s*>\s?/,'')); i++; }
+      const bq = document.createElement('blockquote');
+      bq.innerHTML = inlineMD(bqText.join(' '));
+      appendToSection(bq);
+      continue;
+    }
+
+    // Callouts (::info, ::warn etc)
+    const mCall = norm.match(/^\s*(::(info|warn|danger|note)|::\.|:|\?)\s+(.*)$/i);
+    if(mCall){
+      flushParagraph();
+      let kind = (mCall[2]||'info').toLowerCase();
+      if(mCall[1]==='?') kind='warn';
+      let cBuf = [mCall[3]];
+      let j = i + 1;
+      while(j < lines.length && lines[j].trim() !== '' && !/^\s*::/.test(lines[j])) { cBuf.push(lines[j]); j++; }
+      i = j;
+      const div = document.createElement('div'); div.className = 'callout ' + kind;
+      div.innerHTML = inlineMD(cBuf.join(' '));
+      appendToSection(div);
+      continue;
+    }
+
+    // Math/Function Blocks $$
+    if(/^\s*\$\$\s*$/.test(line)){
+        flushParagraph(); i++;
+        let mBuf = [];
+        while(i<lines.length && !/^\s*\$\$\s*$/.test(lines[i])){ mBuf.push(lines[i++]); }
+        const eq = document.createElement('div'); eq.className = 'equation';
+        eq.innerHTML = escapeHtml(mBuf.join('\n'));
+        eq.onclick = ()=>copyText(eq);
+        appendToSection(eq);
+        if(i<lines.length) i++;
+        continue;
+    }
+
+    // Tables
+    if(/^\s*\|.*\|\s*$/.test(line)){
+        flushParagraph();
+        let rows = [line];
+        while(i+1 < lines.length && /^\s*\|.*\|\s*$/.test(lines[i+1])) rows.push(lines[++i]);
+        const tbl = document.createElement('table'); tbl.className='md-table';
+        rows.forEach((r, idx) => {
+            if(idx===1 && /:?-+:?/.test(r)) return; // Skip separator
+            const tr = document.createElement('tr');
+            r.split('|').slice(1,-1).forEach(c => {
+                const tag = idx===0 ? 'th' : 'td';
+                const cell = document.createElement(tag);
+                cell.innerHTML = inlineMD(c.trim());
+                tr.appendChild(cell);
+            });
+            tbl.appendChild(tr);
+        });
+        appendToSection(tbl);
+        i++; continue;
+    }
+    
+    // Lista
+    if(/^\s*[-*]\s+/.test(line)){
+        flushParagraph();
+        const ul = document.createElement('ul'); ul.style.paddingLeft="20px";
+        while(i<lines.length && /^\s*[-*]\s+/.test(lines[i])){
+             const li = document.createElement('li');
+             li.innerHTML = inlineMD(lines[i].replace(/^\s*[-*]\s+/,''));
+             ul.appendChild(li); i++;
+        }
+        appendToSection(ul); continue;
+    }
+
+    if(line.trim() === '') { flushParagraph(); i++; continue; }
+    buf.push(line); i++;
+  }
+  flushParagraph();
+  if(!targetEl.querySelector('.acc')) newSection('Geral');
+}
+
+/* -----------------------------------------------------------
+   VAULT LOGIC (Infinity Core)
+   ----------------------------------------------------------- */
+let items = JSON.parse(localStorage.getItem('vault_v9') || '[]');
+let currentFilter = 'ALL';
+
+function init(){
+    renderVault();
+    // Welcome card if empty
+    if(items.length===0) createCard("# Welcome\nEste é o Dual.Vault v9 Infinity.\n\n::info\nUse **Render Book** para criar documentos ricos.", "SYSTEM", "livro-vivo");
+}
+
+function renderVault() {
+    const v = document.getElementById('vault');
+    const filtered = currentFilter === 'ALL' ? items : items.filter(i => (i.group || '').toUpperCase() === currentFilter);
+    
+    v.innerHTML = filtered.map(i => {
+        const isLivro = i.type === 'livro-vivo';
+        // Se for livro, usamos o HTML renderizado. Se for texto/raw, mostramos textarea.
+        
+        let contentDisplay = '';
+        if(isLivro) {
+            contentDisplay = `<div class="lv-root">${i.rendered}</div>`;
+        } else {
+            contentDisplay = `<textarea readonly class="code-area" style="border:none; padding:0; background:transparent;">${escapeHtml(i.content)}</textarea>`;
+        }
+
+        return `
+        <div class="master-card" id="card-${i.id}">
+            <div class="inner">
+                <div class="header">
+                    <div class="title-group" onclick="toggle('card-${i.id}')">
+                        <div style="display:flex; justify-content:space-between; width:100%;">
+                            <span class="card-title">${escapeHtml(i.title)}</span>
+                            <span class="card-meta">${(i.date||'').split(' ')[0]}</span>
+                        </div>
+                        <span class="card-meta">
+                            ${i.group ? `<span class="tag-badge">${escapeHtml(i.group)}</span>` : ''} 
+                            <span style="opacity:0.5">ID:${String(i.id).slice(-4)}</span>
+                        </span>
+                    </div>
+                    
+                    <div class="dock">
+                        ${isLivro ? `<button class="ico" onclick="downloadMD(${i.id})" title="Baixar MD">⬇</button>` : ''}
+                        <button class="ico" onclick="copyCard(${i.id})" title="Copiar">Copy</button>
+                        <button class="ico" style="color:var(--neon-r)" onclick="deleteCard(${i.id})">✕</button>
+                    </div>
+                </div>
+                
+                <div class="content-box" id="box-${i.id}">
+                    ${contentDisplay}
+                    ${isLivro ? `<div style="margin-top:10px; border-top:1px solid var(--border); padding-top:8px;">
+                        <details style="font-size:10px; color:#666; cursor:pointer"><summary>Ver Markdown Original</summary>
+                        <textarea class="code-area" style="margin-top:5px; height:80px;">${escapeHtml(i.content)}</textarea>
+                        </details>
+                    </div>` : ''}
+                </div>
+            </div>
+        </div>`;
+    }).join('');
+}
+
+/* ACTIONS */
+function renderAndSaveBook(){
+    const md = document.getElementById('mainInput').value;
+    const grp = document.getElementById('mainGroup').value;
+    if(!md.trim()) return toast('Escreva algo!');
+    
+    // 1. Render headless
+    const engine = document.getElementById('livro-root-engine');
+    autoBuildRenderer(md, engine);
+    const html = engine.innerHTML;
+    
+    createCard(md, grp, 'livro-vivo', html);
+    document.getElementById('mainInput').value = '';
+    toast('Livro-Vivo Renderizado!');
+}
+
+function saveManual(){
+    const md = document.getElementById('mainInput').value;
+    const grp = document.getElementById('mainGroup').value;
+    if(!md.trim()) return;
+    createCard(md, grp, 'text');
+    document.getElementById('mainInput').value = '';
+    toast('Texto Salvo');
+}
+
+function createCard(content, group, type, renderedHtml = null) {
+    const lines = content.split('\n');
+    let title = lines[0].replace(/^[#\s]+/, '').substring(0, 40) || 'Sem Título';
+    
+    items.unshift({ 
+        id: Date.now(),
+        title, 
+        content, 
+        group: (group||'').toUpperCase(), 
+        date: new Date().toLocaleDateString('pt-BR'),
+        type: type,
+        rendered: renderedHtml
+    });
+    save();
+}
+
+function save() { localStorage.setItem('vault_v9', JSON.stringify(items)); renderVault(); }
+
+function toggle(id) { 
+    const el = document.getElementById(id);
+    if(el) el.classList.toggle('expanded');
+}
+
+function deleteCard(id) { if(confirm('Apagar?')) { items = items.filter(i=>i.id!==id); save(); } }
+function filterVault(f) { currentFilter=f; document.querySelectorAll('.filter-pill').forEach(p=>p.classList.remove('active')); event.target.classList.add('active'); renderVault(); }
+
+function copyCard(id){
+    const item = items.find(i=>i.id===id);
+    navigator.clipboard.writeText(item.content).then(()=>toast('Conteúdo Copiado'));
+}
+function downloadMD(id){
+    const item = items.find(i=>i.id===id);
+    const blob = new Blob([item.content], {type:'text/markdown'});
+    const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = (item.title||'doc')+'.md'; a.click();
+}
+function toast(m){
+    const t = document.createElement('div');
+    t.style.cssText = "position:fixed; bottom:20px; left:50%; transform:translateX(-50%); background:var(--neon-p); color:#fff; padding:6px 12px; border-radius:20px; font-size:12px; font-weight:bold; box-shadow:0 5px 15px rgba(0,0,0,0.5); z-index:999";
+    t.innerText = m; document.body.appendChild(t); setTimeout(()=>t.remove(), 2000);
+}
+async function magicPaste(){ try{const t=await navigator.clipboard.readText(); if(t) document.getElementById('mainInput').value += t;}catch(e){} }
+
+// Boot
+init();
+</script>
+</body>
+</html>
